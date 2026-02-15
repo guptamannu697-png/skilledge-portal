@@ -1479,26 +1479,34 @@
             }
 
             showLoading('Logging in...');
-            // Fresh load from Firebase
-            await initPortal();
+            try {
+                // Fresh load ALL data from Firebase
+                await initPortal();
 
-            const student = students.find(s => {
-                const studentEmail = (s.email || '').trim().toLowerCase();
-                const studentMobile = (s.mobile || '').trim().replace(/[^0-9]/g, '');
-                return studentEmail === email && studentMobile === mobile;
-            });
+                const student = students.find(s => {
+                    const studentEmail = (s.email || '').trim().toLowerCase();
+                    const studentMobile = (s.mobile || '').trim().replace(/[^0-9]/g, '');
+                    return studentEmail === email && studentMobile === mobile;
+                });
 
-            hideLoading();
-            
-            if (student) {
-                currentUser = { type: 'student', data: student };
-                hide('studentLoginScreen');
-                show('studentDashboard');
-                currentScreen = 'studentDashboard';
-                loadStudentData(student);
-            } else {
-                const emailHint = students.length > 0 ? 'Make sure email and mobile match your registration.' : 'No students registered yet.';
-                showMessage('studentLoginError', `Invalid credentials. ${emailHint}`);
+                hideLoading();
+
+                if (student) {
+                    currentUser = { type: 'student', data: student };
+                    hide('studentLoginScreen');
+                    show('studentDashboard');
+                    currentScreen = 'studentDashboard';
+                    loadStudentData(student);
+                } else {
+                    const hint = students.length > 0
+                        ? 'Email ya mobile match nahi hua. Check karein.'
+                        : 'Koi student registered nahi hai abhi.';
+                    showMessage('studentLoginError', hint);
+                }
+            } catch(err) {
+                hideLoading();
+                console.error('Login error:', err);
+                showMessage('studentLoginError', 'Connection error. Check internet and try again.');
             }
         }
 
@@ -1542,14 +1550,24 @@
             // Handle both old (single course) and new (multiple courses) format
             const studentCourses = student.courses || (student.course ? [student.course] : []);
             const courseText = studentCourses.length > 0 
-                ? studentCourses.map(c => courseNames[c]).join(', ')
+                ? studentCourses.map(c => courseNames[c] || c).join(', ')
                 : 'Not Assigned';
             document.getElementById('studentCourse').textContent = courseText;
+
+            // Debug log
+            console.log('=== Student Data ===');
+            console.log('Student:', student.name, '| ID:', student.id);
+            console.log('Courses:', studentCourses);
+            console.log('Total recordings in Firebase:', recordings.length);
+            console.log('Total notes:', notes.length);
+            recordings.forEach(r => {
+                console.log('Recording:', r.title, '| targetType:', r.targetType, '| targetCourse:', r.targetCourse);
+            });
 
             // Calculate attendance
             const totalSessions = Object.keys(attendance).length;
             const attended = Object.keys(attendance).filter(date => 
-                attendance[date].students[student.id]
+                attendance[date].students && attendance[date].students[student.id]
             ).length;
             const percent = totalSessions > 0 ? Math.round((attended / totalSessions) * 100) : 0;
             document.getElementById('studentAttendance').textContent = `${percent}% (${attended}/${totalSessions})`;
@@ -1622,18 +1640,20 @@
             }
 
             if (content.targetType === 'course') {
-                // Handle both old (single course) and new (multiple courses) format
                 const studentCourses = student.courses || (student.course ? [student.course] : []);
                 return studentCourses.includes(content.targetCourse);
             }
 
             if (content.targetType === 'group') {
-                const group = groups.find(g => g.id === content.targetGroup);
-                return group && group.studentIds.includes(student.id);
+                // Convert to string for comparison (Firebase IDs are strings)
+                const group = groups.find(g => String(g.id) === String(content.targetGroup));
+                if (!group) return false;
+                return group.studentIds.map(String).includes(String(student.id));
             }
 
             if (content.targetType === 'students') {
-                return content.targetStudents && content.targetStudents.includes(student.id);
+                if (!content.targetStudents) return false;
+                return content.targetStudents.map(String).includes(String(student.id));
             }
 
             return false;
