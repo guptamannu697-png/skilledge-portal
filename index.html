@@ -657,6 +657,185 @@
             color: #e74c3c;
             font-weight: 600;
         }
+
+        /* Data Management Styles */
+        .data-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px 10px 10px 0;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .data-btn-export {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+        }
+
+        .data-btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .data-btn-import {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .data-btn-import:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .data-btn-clear {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .data-btn-clear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef3 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #1a5f7a;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1a5f7a;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #1a5f7a;
+            box-shadow: 0 0 0 3px rgba(26, 95, 122, 0.1);
+        }
+
+        .edit-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        .edit-modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .edit-modal-header {
+            background: linear-gradient(135deg, #1a5f7a 0%, #0d4a5f 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .edit-modal-body {
+            padding: 30px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #1a5f7a;
+            background: white;
+            color: #1a5f7a;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #1a5f7a;
+            color: white;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -699,10 +878,16 @@
             <div class="form-group">
                 <label>Email Address</label>
                 <input type="email" id="studentLoginEmail" placeholder="your@email.com">
+                <small style="display: block; margin-top: 5px; color: #666; font-size: 12px;">
+                    💡 Enter email (case doesn't matter)
+                </small>
             </div>
             <div class="form-group">
                 <label>Mobile Number</label>
                 <input type="tel" id="studentLoginMobile" placeholder="9876543210">
+                <small style="display: block; margin-top: 5px; color: #666; font-size: 12px;">
+                    💡 Enter 10-digit mobile number (no spaces, no +91)
+                </small>
             </div>
             <button class="btn" onclick="studentLogin()">Login</button>
             <div id="studentLoginError" class="message message-error"></div>
@@ -715,10 +900,7 @@
             <h2>Team Login</h2>
             <div class="form-group">
                 <label>Password</label>
-                <input type="text" id="teamLoginPassword" placeholder="Enter team password" value="skilledge2025">
-                <small style="display: block; margin-top: 8px; color: #666; font-size: 13px;">
-                    ℹ️ Default Password: <strong style="color: #1a5f7a;">skilledge2025</strong>
-                </small>
+                <input type="password" id="teamLoginPassword" placeholder="Enter team password">
             </div>
             <button class="btn" onclick="teamLogin()">Login</button>
             <div id="teamLoginError" class="message message-error"></div>
@@ -804,11 +986,37 @@
 
         <div class="card">
             <div class="tabs">
-                <div class="tab active" onclick="switchTeamTab('studentsTab')">👥 Students</div>
+                <div class="tab active" onclick="switchTeamTab('dashboardTab')">📊 Dashboard</div>
+                <div class="tab" onclick="switchTeamTab('studentsTab')">👥 Students</div>
                 <div class="tab" onclick="switchTeamTab('attendanceTab')">✅ Attendance</div>
                 <div class="tab" onclick="switchTeamTab('uploadTab')">📤 Upload Content</div>
                 <div class="tab" onclick="switchTeamTab('groupsTab')">👪 Groups</div>
                 <div class="tab" onclick="switchTeamTab('feedbackTab')">⭐ Feedback</div>
+                <div class="tab" onclick="switchTeamTab('dataTab')">💾 Data</div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboardTab" class="tab-content active">
+                <h3>📊 Overview</h3>
+                
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Stats will be populated by JavaScript -->
+                </div>
+
+                <h3 style="margin-top: 30px;">📈 Quick Actions</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn" onclick="switchTeamTab('studentsTab')">➕ Add Student</button>
+                    <button class="btn" onclick="switchTeamTab('attendanceTab')">✅ Mark Attendance</button>
+                    <button class="btn" onclick="switchTeamTab('uploadTab')">📤 Upload Content</button>
+                    <button class="btn" onclick="switchTeamTab('groupsTab')">👪 Create Group</button>
+                </div>
+
+                <div style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 10px;">
+                    <h4 style="color: #1a5f7a; margin-bottom: 15px;">🔔 Recent Activity</h4>
+                    <div id="recentActivity">
+                        <p style="color: #666; font-size: 14px;">No recent activity</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Students Tab -->
@@ -995,6 +1203,44 @@
                 <h3>⭐ Student Feedback</h3>
                 <div id="feedbacksList" class="resource-grid"></div>
             </div>
+
+            <!-- Data Management Tab -->
+            <div id="dataTab" class="tab-content">
+                <h3>💾 Data Management</h3>
+                
+                <div style="background: #e8f5e9; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                    <h4 style="color: #27ae60; margin-bottom: 15px;">📥 Backup & Restore</h4>
+                    <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                        Export all your data to keep a backup. You can import it later to restore everything.
+                    </p>
+                    
+                    <button class="data-btn data-btn-export" onclick="exportAllData()">
+                        📥 Export All Data
+                    </button>
+                    <button class="data-btn data-btn-import" onclick="document.getElementById('importFileInput').click()">
+                        📤 Import Data
+                    </button>
+                    <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importData(event)">
+                    
+                    <div id="dataMessage" style="margin-top: 15px;"></div>
+                </div>
+
+                <div style="background: #fff3e0; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                    <h4 style="color: #f39c12; margin-bottom: 15px;">📊 Data Statistics</h4>
+                    <div id="dataStats"></div>
+                </div>
+
+                <div style="background: #ffebee; padding: 20px; border-radius: 10px;">
+                    <h4 style="color: #e74c3c; margin-bottom: 15px;">🗑️ Danger Zone</h4>
+                    <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                        ⚠️ <strong>Warning:</strong> This will delete ALL data permanently. This action cannot be undone!
+                    </p>
+                    
+                    <button class="data-btn data-btn-clear" onclick="confirmClearAllData()">
+                        🗑️ Clear All Data
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1037,6 +1283,65 @@
                         We are a team of 9 members, each with different expertise, dedicated to transforming potential into power through quality education and training.
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="edit-modal">
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h2>✏️ Edit Student</h2>
+                <button class="close-detail-btn" onclick="closeEditModal()">✕ Close</button>
+            </div>
+            <div class="edit-modal-body">
+                <input type="hidden" id="editStudentId">
+                
+                <div class="form-group">
+                    <label>Student Name</label>
+                    <input type="text" id="editStudentName" placeholder="Enter student name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="editStudentEmail" placeholder="student@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="tel" id="editStudentMobile" placeholder="9876543210">
+                </div>
+                
+                <div class="form-group">
+                    <label>📚 Enrolled Courses</label>
+                    <div id="editStudentCourses" class="checkbox-list" style="background: #f9f9f9; padding: 15px; border-radius: 10px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: normal;">
+                            <input type="checkbox" value="powerbi-pro" style="margin-right: 8px;"> Power BI Pro
+                        </label>
+                        <label style="display: block; margin-bottom: 10px; font-weight: normal;">
+                            <input type="checkbox" value="excel-adv" style="margin-right: 8px;"> Excel Advanced
+                        </label>
+                        <label style="display: block; margin-bottom: 10px; font-weight: normal;">
+                            <input type="checkbox" value="google-sheets" style="margin-right: 8px;"> Google Sheets
+                        </label>
+                        <label style="display: block; margin-bottom: 10px; font-weight: normal;">
+                            <input type="checkbox" value="sql-complete" style="margin-right: 8px;"> SQL Complete
+                        </label>
+                        <label style="display: block; margin-bottom: 10px; font-weight: normal;">
+                            <input type="checkbox" value="python-ds" style="margin-right: 8px;"> Python for Data Science
+                        </label>
+                        <label style="display: block; margin-bottom: 0; font-weight: normal;">
+                            <input type="checkbox" value="full-stack" style="margin-right: 8px;"> Full Stack Analytics
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn" onclick="saveStudentEdit()" style="flex: 1;">💾 Save Changes</button>
+                    <button class="btn" onclick="closeEditModal()" style="flex: 1; background: #95a5a6;">Cancel</button>
+                </div>
+                
+                <div id="editMessage" class="message message-success" style="margin-top: 15px;"></div>
             </div>
         </div>
     </div>
@@ -1123,15 +1428,21 @@
 
         // Login Functions
         function studentLogin() {
-            const email = document.getElementById('studentLoginEmail').value.trim();
-            const mobile = document.getElementById('studentLoginMobile').value.trim();
+            const email = document.getElementById('studentLoginEmail').value.trim().toLowerCase();
+            const mobile = document.getElementById('studentLoginMobile').value.trim().replace(/[^0-9]/g, '');
 
             if (!email || !mobile) {
                 showMessage('studentLoginError', 'Please enter both email and mobile number');
                 return;
             }
 
-            const student = students.find(s => s.email === email && s.mobile === mobile);
+            // Find student with case-insensitive email and normalized mobile
+            const student = students.find(s => {
+                const studentEmail = (s.email || '').trim().toLowerCase();
+                const studentMobile = (s.mobile || '').trim().replace(/[^0-9]/g, '');
+                return studentEmail === email && studentMobile === mobile;
+            });
+            
             if (student) {
                 currentUser = { type: 'student', data: student };
                 hide('studentLoginScreen');
@@ -1139,7 +1450,9 @@
                 currentScreen = 'studentDashboard';
                 loadStudentData(student);
             } else {
-                showMessage('studentLoginError', 'Invalid credentials. Please check your email and mobile number.');
+                // Better error message
+                const emailHint = students.length > 0 ? 'Make sure email and mobile match your registration.' : 'No students registered yet.';
+                showMessage('studentLoginError', `Invalid credentials. ${emailHint}`);
             }
         }
 
@@ -1400,6 +1713,7 @@
                         </div>
                         <div class="student-actions">
                             <button class="btn-view-details" onclick="viewStudentDetails(${s.id})">👁️ View Details</button>
+                            <button class="btn-edit" onclick="openEditModal(${s.id})">✏️ Edit</button>
                             <button class="btn btn-small btn-delete" onclick="deleteStudent(${s.id})">Delete</button>
                         </div>
                     </div>
@@ -1951,7 +2265,269 @@
             if (event.target == modal) {
                 closeStudentDetail();
             }
+            const editModal = document.getElementById('editStudentModal');
+            if (event.target == editModal) {
+                closeEditModal();
+            }
         });
+
+        // Edit Student Functions
+        function openEditModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+
+            document.getElementById('editStudentId').value = student.id;
+            document.getElementById('editStudentName').value = student.name;
+            document.getElementById('editStudentEmail').value = student.email;
+            document.getElementById('editStudentMobile').value = student.mobile;
+
+            // Handle both old and new course format
+            const studentCourses = student.courses || (student.course ? [student.course] : []);
+            
+            // Uncheck all first
+            document.querySelectorAll('#editStudentCourses input[type="checkbox"]').forEach(cb => cb.checked = false);
+            
+            // Check student's courses
+            studentCourses.forEach(course => {
+                const checkbox = document.querySelector(`#editStudentCourses input[value="${course}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+
+            document.getElementById('editStudentModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editStudentModal').style.display = 'none';
+            document.getElementById('editMessage').style.display = 'none';
+        }
+
+        function saveStudentEdit() {
+            const id = parseInt(document.getElementById('editStudentId').value);
+            const name = document.getElementById('editStudentName').value.trim();
+            const email = document.getElementById('editStudentEmail').value.trim();
+            const mobile = document.getElementById('editStudentMobile').value.trim();
+            
+            const courseCheckboxes = document.querySelectorAll('#editStudentCourses input[type="checkbox"]:checked');
+            const courses = Array.from(courseCheckboxes).map(cb => cb.value);
+
+            if (!name || !email || !mobile) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            if (courses.length === 0) {
+                alert('Please select at least one course');
+                return;
+            }
+
+            const studentIndex = students.findIndex(s => s.id === id);
+            if (studentIndex !== -1) {
+                students[studentIndex] = {
+                    ...students[studentIndex],
+                    name,
+                    email,
+                    mobile,
+                    courses
+                };
+                saveData('students');
+                
+                const msg = document.getElementById('editMessage');
+                msg.textContent = 'Student updated successfully! ✅';
+                msg.style.display = 'block';
+                
+                setTimeout(() => {
+                    closeEditModal();
+                    loadStudentsList();
+                }, 1500);
+            }
+        }
+
+        // Dashboard Functions
+        function loadDashboardStats() {
+            const totalStudents = students.length;
+            const totalSessions = Object.keys(attendance).length;
+            const totalContent = recordings.length + notes.length + practice.length;
+            const totalGroups = groups.length;
+            const totalFeedback = feedbacks.length;
+            
+            // Calculate average attendance
+            let avgAttendance = 0;
+            if (totalSessions > 0 && totalStudents > 0) {
+                const totalAttended = students.reduce((sum, student) => {
+                    const attended = Object.keys(attendance).filter(date => 
+                        attendance[date].students[student.id]
+                    ).length;
+                    return sum + attended;
+                }, 0);
+                avgAttendance = Math.round((totalAttended / (totalSessions * totalStudents)) * 100);
+            }
+
+            const statsHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value">${totalStudents}</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value">${totalSessions}</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-value">${totalContent}</div>
+                    <div class="stat-label">Content Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">${avgAttendance}%</div>
+                    <div class="stat-label">Avg Attendance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👪</div>
+                    <div class="stat-value">${totalGroups}</div>
+                    <div class="stat-label">Groups</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-value">${totalFeedback}</div>
+                    <div class="stat-label">Feedback</div>
+                </div>
+            `;
+            
+            document.getElementById('statsGrid').innerHTML = statsHTML;
+        }
+
+        // Data Export/Import Functions
+        function exportAllData() {
+            const data = {
+                students: students,
+                recordings: recordings,
+                notes: notes,
+                practice: practice,
+                attendance: attendance,
+                feedbacks: feedbacks,
+                groups: groups,
+                exportDate: new Date().toISOString(),
+                version: '2.0'
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `skilledge-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            const msg = document.getElementById('dataMessage');
+            msg.innerHTML = '<p style="color: #27ae60; font-weight: 600;">✅ Data exported successfully!</p>';
+            setTimeout(() => msg.innerHTML = '', 3000);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (confirm('This will replace all current data. Are you sure?')) {
+                        if (data.students) students = data.students;
+                        if (data.recordings) recordings = data.recordings;
+                        if (data.notes) notes = data.notes;
+                        if (data.practice) practice = data.practice;
+                        if (data.attendance) attendance = data.attendance;
+                        if (data.feedbacks) feedbacks = data.feedbacks;
+                        if (data.groups) groups = data.groups;
+
+                        // Save all to localStorage
+                        saveData('students');
+                        saveData('recordings');
+                        saveData('notes');
+                        saveData('practice');
+                        saveData('attendance');
+                        saveData('feedbacks');
+                        saveData('groups');
+
+                        const msg = document.getElementById('dataMessage');
+                        msg.innerHTML = '<p style="color: #27ae60; font-weight: 600;">✅ Data imported successfully!</p>';
+                        
+                        loadTeamData();
+                        loadDashboardStats();
+                        loadDataStats();
+                        
+                        setTimeout(() => msg.innerHTML = '', 3000);
+                    }
+                } catch (error) {
+                    alert('Error importing data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        function confirmClearAllData() {
+            const confirmation = prompt('Type "DELETE ALL" to confirm deletion of all data:');
+            if (confirmation === 'DELETE ALL') {
+                localStorage.clear();
+                location.reload();
+            } else if (confirmation !== null) {
+                alert('Deletion cancelled. Text did not match.');
+            }
+        }
+
+        function loadDataStats() {
+            const stats = `
+                <div style="display: grid; gap: 15px;">
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 8px;">
+                        <span style="font-weight: 600; color: #666;">Students:</span>
+                        <span style="font-weight: 700; color: #1a5f7a;">${students.length}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 8px;">
+                        <span style="font-weight: 600; color: #666;">Class Recordings:</span>
+                        <span style="font-weight: 700; color: #1a5f7a;">${recordings.length}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 8px;">
+                        <span style="font-weight: 600; color: #666;">Study Notes:</span>
+                        <span style="font-weight: 700; color: #1a5f7a;">${notes.length}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 8px;">
+                        <span style="font-weight: 600; color: #666;">Practice Files:</span>
+                        <span style="font-weight: 700; color: #1a5f7a;">${practice.length}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 8px;">
+                        <span style="font-weight: 600; color: #666;">Attendance Records:</span>
+                        <span style="font-weight: 700; color: #1a5f7a;">${Object.keys(attendance).length}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 8px;">
+                        <span style="font-weight: 600; color: #666;">Groups:</span>
+                        <span style="font-weight: 700; color: #1a5f7a;">${groups.length}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 8px;">
+                        <span style="font-weight: 600; color: #666;">Feedback:</span>
+                        <span style="font-weight: 700; color: #1a5f7a;">${feedbacks.length}</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('dataStats').innerHTML = stats;
+        }
+
+        // Update loadTeamData to include dashboard
+        const originalLoadTeamData = loadTeamData;
+        loadTeamData = function() {
+            originalLoadTeamData();
+            loadDashboardStats();
+            loadDataStats();
+        };
     </script>
 </body>
 </html>
