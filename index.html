@@ -1353,6 +1353,15 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
+        <div style="background:white; padding:30px 40px; border-radius:15px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+            <div style="font-size:40px; margin-bottom:15px;">⏳</div>
+            <div id="loadingText" style="font-size:16px; color:#1a5f7a; font-weight:600;">Loading...</div>
+            <div style="margin-top:10px; color:#999; font-size:12px;">Please wait</div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <div class="footer">
         <p>
@@ -1366,15 +1375,48 @@
         </p>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-        // Data Storage
-        let students = JSON.parse(localStorage.getItem('se_students')) || [];
-        let recordings = JSON.parse(localStorage.getItem('se_recordings')) || [];
-        let notes = JSON.parse(localStorage.getItem('se_notes')) || [];
-        let practice = JSON.parse(localStorage.getItem('se_practice')) || [];
-        let feedbacks = JSON.parse(localStorage.getItem('se_feedbacks')) || [];
-        let attendance = JSON.parse(localStorage.getItem('se_attendance')) || {};
-        let groups = JSON.parse(localStorage.getItem('se_groups')) || [];
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getFirestore, collection, doc,
+            addDoc, setDoc, getDocs, deleteDoc, updateDoc,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAf_fL6wDRlSSgA5h8dpCP1x69HBcCDdhs",
+            authDomain: "skilledge-portal.firebaseapp.com",
+            projectId: "skilledge-portal",
+            storageBucket: "skilledge-portal.firebasestorage.app",
+            messagingSenderId: "98923859718",
+            appId: "1:98923859718:web:5da1c78972a4177b069887"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.fbCol = collection;
+        window.fbDoc = doc;
+        window.fbAdd = addDoc;
+        window.fbSet = setDoc;
+        window.fbGet = getDocs;
+        window.fbDelete = deleteDoc;
+        window.fbUpdate = updateDoc;
+        window.fbSnapshot = onSnapshot;
+        window.firebaseReady = true;
+    </script>
+
+    <script>
+        // Data Storage (in-memory, synced with Firebase)
+        let students = [];
+        let recordings = [];
+        let notes = [];
+        let practice = [];
+        let feedbacks = [];
+        let attendance = {};
+        let groups = [];
 
         let currentUser = null;
         let currentScreen = 'loginTypeScreen';
@@ -1427,7 +1469,7 @@
         }
 
         // Login Functions
-        function studentLogin() {
+        async function studentLogin() {
             const email = document.getElementById('studentLoginEmail').value.trim().toLowerCase();
             const mobile = document.getElementById('studentLoginMobile').value.trim().replace(/[^0-9]/g, '');
 
@@ -1436,12 +1478,17 @@
                 return;
             }
 
-            // Find student with case-insensitive email and normalized mobile
+            showLoading('Logging in...');
+            // Fresh load from Firebase
+            await initPortal();
+
             const student = students.find(s => {
                 const studentEmail = (s.email || '').trim().toLowerCase();
                 const studentMobile = (s.mobile || '').trim().replace(/[^0-9]/g, '');
                 return studentEmail === email && studentMobile === mobile;
             });
+
+            hideLoading();
             
             if (student) {
                 currentUser = { type: 'student', data: student };
@@ -1450,25 +1497,22 @@
                 currentScreen = 'studentDashboard';
                 loadStudentData(student);
             } else {
-                // Better error message
                 const emailHint = students.length > 0 ? 'Make sure email and mobile match your registration.' : 'No students registered yet.';
                 showMessage('studentLoginError', `Invalid credentials. ${emailHint}`);
             }
         }
 
-        function teamLogin() {
+        async function teamLogin() {
             const password = document.getElementById('teamLoginPassword').value;
-
-            if (!password) {
-                showMessage('teamLoginError', 'Please enter password');
-                return;
-            }
+            if (!password) { showMessage('teamLoginError', 'Please enter password'); return; }
 
             if (password === 'skilledge2025') {
                 currentUser = { type: 'team' };
                 hide('teamLoginScreen');
                 show('teamDashboard');
                 currentScreen = 'teamDashboard';
+                // Load fresh data from Firebase
+                await initPortal();
                 loadTeamData();
             } else {
                 showMessage('teamLoginError', 'Invalid password');
@@ -1595,30 +1639,28 @@
             return false;
         }
 
-        function submitFeedback() {
+        async function submitFeedback() {
             const rating = parseInt(document.getElementById('feedbackRating').value);
             const text = document.getElementById('feedbackText').value.trim();
+            if (!text) { alert('Please write your feedback'); return; }
 
-            if (!text) {
-                alert('Please write your feedback');
-                return;
-            }
+            showLoading('Submitting feedback...');
+            try {
+                const feedback = {
+                    studentName: currentUser.data.name,
+                    studentId: currentUser.data.id,
+                    rating, text,
+                    date: new Date().toISOString()
+                };
+                const docRef = await window.fbAdd(window.fbCol(window.db, 'feedbacks'), feedback);
+                feedback.id = docRef.id;
+                feedbacks.push(feedback);
 
-            const feedback = {
-                id: Date.now(),
-                studentName: currentUser.data.name,
-                studentId: currentUser.data.id,
-                rating,
-                text,
-                date: new Date().toISOString()
-            };
-
-            feedbacks.push(feedback);
-            saveData('feedbacks');
-            
-            document.getElementById('feedbackText').value = '';
-            document.getElementById('feedbackRating').value = '5';
-            showMessage('feedbackSuccess', 'Thank you for your feedback! 🎉');
+                document.getElementById('feedbackText').value = '';
+                document.getElementById('feedbackRating').value = '5';
+                showMessage('feedbackSuccess', 'Thank you for your feedback! 🎉');
+            } catch(e) { console.error(e); alert('Error submitting feedback.'); }
+            hideLoading();
         }
 
         // Team Functions
@@ -1631,50 +1673,43 @@
             loadGroupStudentsList();
             loadTargetStudentsList();
             updateGroupDropdown();
+            loadDashboardStats();
+            loadDataStats();
         }
 
-        function addStudent() {
+        async function addStudent() {
             const name = document.getElementById('studentNameInput').value.trim();
             const email = document.getElementById('studentEmailInput').value.trim();
             const mobile = document.getElementById('studentMobileInput').value.trim();
-            
-            // Get selected courses from checkboxes
             const courseCheckboxes = document.querySelectorAll('#studentCourseInput input[type="checkbox"]:checked');
             const courses = Array.from(courseCheckboxes).map(cb => cb.value);
 
-            if (!name || !email || !mobile) {
-                alert('Please fill all fields');
-                return;
+            if (!name || !email || !mobile) { alert('Please fill all fields'); return; }
+            if (courses.length === 0) { alert('Please select at least one course'); return; }
+
+            showLoading('Adding student...');
+            try {
+                const student = { name, email, mobile, courses, createdAt: new Date().toISOString() };
+                const docRef = await window.fbAdd(window.fbCol(window.db, 'students'), student);
+                student.id = docRef.id;
+                students.push(student);
+
+                document.getElementById('studentNameInput').value = '';
+                document.getElementById('studentEmailInput').value = '';
+                document.getElementById('studentMobileInput').value = '';
+                document.querySelectorAll('#studentCourseInput input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+                showMessage('studentSuccess', 'Student added successfully! ✅');
+                loadStudentsList();
+                loadAttendanceCheckboxes();
+                loadGroupStudentsList();
+                loadTargetStudentsList();
+                loadDashboardStats();
+            } catch(e) {
+                console.error(e);
+                alert('Error adding student. Check internet connection.');
             }
-
-            if (courses.length === 0) {
-                alert('Please select at least one course');
-                return;
-            }
-
-            const student = {
-                id: Date.now(),
-                name,
-                email,
-                mobile,
-                courses: courses  // Array of courses instead of single course
-            };
-
-            students.push(student);
-            saveData('students');
-            
-            document.getElementById('studentNameInput').value = '';
-            document.getElementById('studentEmailInput').value = '';
-            document.getElementById('studentMobileInput').value = '';
-            
-            // Uncheck all course checkboxes
-            document.querySelectorAll('#studentCourseInput input[type="checkbox"]').forEach(cb => cb.checked = false);
-
-            showMessage('studentSuccess', 'Student added successfully! ✅');
-            loadStudentsList();
-            loadAttendanceCheckboxes();
-            loadGroupStudentsList();
-            loadTargetStudentsList();
+            hideLoading();
         }
 
         function loadStudentsList(studentsToShow = students) {
@@ -1738,44 +1773,42 @@
             loadStudentsList(filtered);
         }
 
-        function deleteStudent(id) {
+        async function deleteStudent(id) {
             if (!confirm('Are you sure you want to delete this student?')) return;
-            students = students.filter(s => s.id !== id);
-            saveData('students');
-            loadStudentsList();
-            loadAttendanceCheckboxes();
-            loadGroupStudentsList();
-            loadTargetStudentsList();
+            showLoading('Deleting...');
+            try {
+                await window.fbDelete(window.fbDoc(window.db, 'students', id));
+                students = students.filter(s => s.id !== id);
+                loadStudentsList();
+                loadAttendanceCheckboxes();
+                loadGroupStudentsList();
+                loadTargetStudentsList();
+                loadDashboardStats();
+            } catch(e) { console.error(e); alert('Error deleting student.'); }
+            hideLoading();
         }
 
-        function markAttendance() {
+        async function markAttendance() {
             const date = document.getElementById('attendanceDate').value;
             const liveLink = document.getElementById('liveLinkInput').value.trim();
-            
-            if (!date) {
-                alert('Please select a date');
-                return;
-            }
+            if (!date) { alert('Please select a date'); return; }
 
             const checkboxes = document.querySelectorAll('.attendance-checkbox');
             const presentStudents = {};
-            
-            checkboxes.forEach(cb => {
-                presentStudents[cb.dataset.studentId] = cb.checked;
-            });
+            checkboxes.forEach(cb => { presentStudents[cb.dataset.studentId] = cb.checked; });
 
-            attendance[date] = {
-                students: presentStudents,
-                liveLink: liveLink || null
-            };
+            showLoading('Saving attendance...');
+            try {
+                const record = { students: presentStudents, liveLink: liveLink || null };
+                await window.fbSet(window.fbDoc(window.db, 'attendance', date), record);
+                attendance[date] = record;
 
-            saveData('attendance');
-            
-            document.getElementById('liveLinkInput').value = '';
-            checkboxes.forEach(cb => cb.checked = false);
-            
-            showMessage('attendanceSuccess', 'Attendance marked successfully! ✅');
-            loadAttendanceRecords();
+                document.getElementById('liveLinkInput').value = '';
+                checkboxes.forEach(cb => cb.checked = false);
+                showMessage('attendanceSuccess', 'Attendance marked successfully! ✅');
+                loadAttendanceRecords();
+            } catch(e) { console.error(e); alert('Error saving attendance.'); }
+            hideLoading();
         }
 
         function loadAttendanceCheckboxes() {
@@ -1877,7 +1910,7 @@
             `).join('');
         }
 
-        function uploadContent() {
+        async function uploadContent() {
             const title = document.getElementById('uploadTitle').value.trim();
             const category = document.getElementById('uploadCategory').value;
             const type = document.getElementById('uploadType').value;
@@ -1915,8 +1948,7 @@
                 return;
             }
 
-            const content = {
-                id: Date.now(),
+            const contentItem = {
                 title,
                 category,
                 url,
@@ -1928,27 +1960,28 @@
                 targetStudents
             };
 
-            if (type === 'recording') {
-                recordings.push(content);
-                saveData('recordings');
-            } else if (type === 'notes') {
-                notes.push(content);
-                saveData('notes');
-            } else {
-                practice.push(content);
-                saveData('practice');
-            }
+            showLoading('Uploading content...');
+            try {
+                let colName = type === 'recording' ? 'recordings' : type === 'notes' ? 'notes' : 'practice';
+                const docRef = await window.fbAdd(window.fbCol(window.db, colName), contentItem);
+                contentItem.id = docRef.id;
 
-            document.getElementById('uploadTitle').value = '';
-            document.getElementById('uploadUrl').value = '';
-            document.getElementById('uploadDescription').value = '';
-            document.getElementById('targetAudienceType').value = 'all';
-            updateTargetSelection();
+                if (type === 'recording') recordings.push(contentItem);
+                else if (type === 'notes') notes.push(contentItem);
+                else practice.push(contentItem);
 
-            showMessage('uploadSuccess', 'Content uploaded successfully! ✅');
+                document.getElementById('uploadTitle').value = '';
+                document.getElementById('uploadUrl').value = '';
+                document.getElementById('uploadDescription').value = '';
+                document.getElementById('targetAudienceType').value = 'all';
+                updateTargetSelection();
+                showMessage('uploadSuccess', 'Content uploaded successfully! ✅');
+                loadDashboardStats();
+            } catch(e) { console.error(e); alert('Error uploading content.'); }
+            hideLoading();
         }
 
-        function createGroup() {
+        async function createGroup() {
             const name = document.getElementById('groupNameInput').value.trim();
             const checkboxes = document.querySelectorAll('#groupStudentsList input:checked');
             const studentIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
@@ -1970,15 +2003,20 @@
                 createdAt: new Date().toISOString()
             };
 
-            groups.push(group);
-            saveData('groups');
+            showLoading('Creating group...');
+            try {
+                const docRef = await window.fbAdd(window.fbCol(window.db, 'groups'), group);
+                group.id = docRef.id;
+                groups.push(group);
 
-            document.getElementById('groupNameInput').value = '';
-            document.querySelectorAll('#groupStudentsList input').forEach(cb => cb.checked = false);
-
-            showMessage('groupSuccess', 'Group created successfully! ✅');
-            loadGroupsList();
-            updateGroupDropdown();
+                document.getElementById('groupNameInput').value = '';
+                document.querySelectorAll('#groupStudentsList input').forEach(cb => cb.checked = false);
+                showMessage('groupSuccess', 'Group created successfully! ✅');
+                loadGroupsList();
+                updateGroupDropdown();
+                loadDashboardStats();
+            } catch(e) { console.error(e); alert('Error creating group.'); }
+            hideLoading();
         }
 
         function loadGroupStudentsList() {
@@ -2023,12 +2061,16 @@
             }).join('');
         }
 
-        function deleteGroup(id) {
+        async function deleteGroup(id) {
             if (!confirm('Are you sure you want to delete this group?')) return;
-            groups = groups.filter(g => g.id !== id);
-            saveData('groups');
-            loadGroupsList();
-            updateGroupDropdown();
+            showLoading('Deleting group...');
+            try {
+                await window.fbDelete(window.fbDoc(window.db, 'groups', id));
+                groups = groups.filter(g => g.id !== id);
+                loadGroupsList();
+                updateGroupDropdown();
+            } catch(e) { console.error(e); alert('Error deleting group.'); }
+            hideLoading();
         }
 
         function updateGroupDropdown() {
@@ -2096,23 +2138,46 @@
             setTimeout(() => el.style.display = 'none', 5000);
         }
 
+        // Firebase save (no-op, saves happen in each function directly)
         function saveData(type) {
-            const data = {
-             students: students,
-                recordings: recordings,
-                notes: notes,
-                practice: practice,
-                attendance: attendance,
-                feedbacks: feedbacks,
-                groups: groups
-            };
-            if (type === 'students') localStorage.setItem('se_students', JSON.stringify(students));
-            if (type === 'recordings') localStorage.setItem('se_recordings', JSON.stringify(recordings));
-            if (type === 'notes') localStorage.setItem('se_notes', JSON.stringify(notes));
-            if (type === 'practice') localStorage.setItem('se_practice', JSON.stringify(practice));
-            if (type === 'attendance') localStorage.setItem('se_attendance', JSON.stringify(attendance));
-            if (type === 'feedbacks') localStorage.setItem('se_feedbacks', JSON.stringify(feedbacks));
-            if (type === 'groups') localStorage.setItem('se_groups', JSON.stringify(groups));
+            // Data is saved to Firebase directly in each function
+            // This function kept for compatibility
+        }
+
+        // Show loading indicator
+        function showLoading(msg = 'Loading...') {
+            const el = document.getElementById('loadingOverlay');
+            if (el) { el.querySelector('#loadingText').textContent = msg; el.style.display = 'flex'; }
+        }
+        function hideLoading() {
+            const el = document.getElementById('loadingOverlay');
+            if (el) el.style.display = 'none';
+        }
+
+        // Firebase: Load ALL data at startup
+        async function initPortal() {
+            if (!window.db) { setTimeout(initPortal, 300); return; }
+            showLoading('Loading data...');
+            try {
+                const [stuSnap, recSnap, notSnap, praSnap, fedSnap, grpSnap, attSnap] = await Promise.all([
+                    window.fbGet(window.fbCol(window.db, 'students')),
+                    window.fbGet(window.fbCol(window.db, 'recordings')),
+                    window.fbGet(window.fbCol(window.db, 'notes')),
+                    window.fbGet(window.fbCol(window.db, 'practice')),
+                    window.fbGet(window.fbCol(window.db, 'feedbacks')),
+                    window.fbGet(window.fbCol(window.db, 'groups')),
+                    window.fbGet(window.fbCol(window.db, 'attendance'))
+                ]);
+                students   = stuSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                recordings = recSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                notes      = notSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                practice   = praSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                feedbacks  = fedSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                groups     = grpSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                attendance = {};
+                attSnap.docs.forEach(d => { attendance[d.id] = d.data(); });
+            } catch(e) { console.error('Firebase load error:', e); }
+            hideLoading();
         }
 
         // Student Detail Modal Functions
@@ -2301,7 +2366,7 @@
             document.getElementById('editMessage').style.display = 'none';
         }
 
-        function saveStudentEdit() {
+        async function saveStudentEdit() {
             const id = parseInt(document.getElementById('editStudentId').value);
             const name = document.getElementById('editStudentName').value.trim();
             const email = document.getElementById('editStudentEmail').value.trim();
@@ -2322,23 +2387,18 @@
 
             const studentIndex = students.findIndex(s => s.id === id);
             if (studentIndex !== -1) {
-                students[studentIndex] = {
-                    ...students[studentIndex],
-                    name,
-                    email,
-                    mobile,
-                    courses
-                };
-                saveData('students');
-                
-                const msg = document.getElementById('editMessage');
-                msg.textContent = 'Student updated successfully! ✅';
-                msg.style.display = 'block';
-                
-                setTimeout(() => {
-                    closeEditModal();
-                    loadStudentsList();
-                }, 1500);
+                showLoading('Saving changes...');
+                try {
+                    const updatedData = { name, email, mobile, courses };
+                    await window.fbUpdate(window.fbDoc(window.db, 'students', id), updatedData);
+                    students[studentIndex] = { ...students[studentIndex], ...updatedData };
+
+                    const msg = document.getElementById('editMessage');
+                    msg.textContent = 'Student updated successfully! ✅';
+                    msg.style.display = 'block';
+                    setTimeout(() => { closeEditModal(); loadStudentsList(); }, 1500);
+                } catch(e) { console.error(e); alert('Error updating student.'); }
+                hideLoading();
             }
         }
 
@@ -2434,7 +2494,7 @@
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
                     
@@ -2447,22 +2507,26 @@
                         if (data.feedbacks) feedbacks = data.feedbacks;
                         if (data.groups) groups = data.groups;
 
-                        // Save all to localStorage
-                        saveData('students');
-                        saveData('recordings');
-                        saveData('notes');
-                        saveData('practice');
-                        saveData('attendance');
-                        saveData('feedbacks');
-                        saveData('groups');
+                        showLoading('Importing to Firebase...');
+                        try {
+                            const cols = { students, recordings, notes, practice, feedbacks, groups };
+                            for (const [colName, items] of Object.entries(cols)) {
+                                for (const item of items) {
+                                    const { id, ...itemData } = item;
+                                    await window.fbAdd(window.fbCol(window.db, colName), itemData);
+                                }
+                            }
+                            for (const [date, rec] of Object.entries(attendance)) {
+                                await window.fbSet(window.fbDoc(window.db, 'attendance', date), rec);
+                            }
+                        } catch(err) { console.error('Import error:', err); }
+                        hideLoading();
 
                         const msg = document.getElementById('dataMessage');
-                        msg.innerHTML = '<p style="color: #27ae60; font-weight: 600;">✅ Data imported successfully!</p>';
-                        
+                        msg.innerHTML = '<p style="color: #27ae60; font-weight: 600;">✅ Data imported to Firebase successfully!</p>';
                         loadTeamData();
                         loadDashboardStats();
                         loadDataStats();
-                        
                         setTimeout(() => msg.innerHTML = '', 3000);
                     }
                 } catch (error) {
@@ -2475,13 +2539,29 @@
             event.target.value = '';
         }
 
-        function confirmClearAllData() {
+        async function confirmClearAllData() {
             const confirmation = prompt('Type "DELETE ALL" to confirm deletion of all data:');
-            if (confirmation === 'DELETE ALL') {
-                localStorage.clear();
+            if (confirmation !== 'DELETE ALL') {
+                if (confirmation !== null) alert('Deletion cancelled. Text did not match.');
+                return;
+            }
+
+            showLoading('Deleting all data from Firebase...');
+            try {
+                const collections = ['students','recordings','notes','practice','feedbacks','groups','attendance'];
+                for (const col of collections) {
+                    const snap = await window.fbGet(window.fbCol(window.db, col));
+                    const deletes = snap.docs.map(d => window.fbDelete(window.fbDoc(window.db, col, d.id)));
+                    await Promise.all(deletes);
+                }
+                students=[]; recordings=[]; notes=[]; practice=[]; feedbacks=[]; groups=[]; attendance={};
+                hideLoading();
+                alert('All data deleted successfully!');
                 location.reload();
-            } else if (confirmation !== null) {
-                alert('Deletion cancelled. Text did not match.');
+            } catch(e) {
+                console.error(e);
+                alert('Error deleting data. Please try again.');
+                hideLoading();
             }
         }
 
@@ -2521,13 +2601,7 @@
             document.getElementById('dataStats').innerHTML = stats;
         }
 
-        // Update loadTeamData to include dashboard
-        const originalLoadTeamData = loadTeamData;
-        loadTeamData = function() {
-            originalLoadTeamData();
-            loadDashboardStats();
-            loadDataStats();
-        };
+        // loadTeamData already includes dashboard and dataStats
     </script>
 </body>
 </html>
