@@ -1128,8 +1128,27 @@
                 </div>
 
                 <div class="form-group">
-                    <label>🎯 Target Audience</label>
-                    <select id="targetAudienceType" onchange="updateTargetSelection()">
+                    <label>🎯 Select Target Audience</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                        <div onclick="setTarget('all')" id="targetBtn_all" 
+                             style="padding: 12px; border: 2px solid #1a5f7a; border-radius: 10px; cursor: pointer; text-align: center; background: #1a5f7a; color: white; font-weight: 600; transition: all 0.2s;">
+                            👥 All Students
+                        </div>
+                        <div onclick="setTarget('course')" id="targetBtn_course" 
+                             style="padding: 12px; border: 2px solid #1a5f7a; border-radius: 10px; cursor: pointer; text-align: center; background: white; color: #1a5f7a; font-weight: 600; transition: all 0.2s;">
+                            📚 Specific Course
+                        </div>
+                        <div onclick="setTarget('group')" id="targetBtn_group" 
+                             style="padding: 12px; border: 2px solid #1a5f7a; border-radius: 10px; cursor: pointer; text-align: center; background: white; color: #1a5f7a; font-weight: 600; transition: all 0.2s;">
+                            👪 Specific Group
+                        </div>
+                        <div onclick="setTarget('students')" id="targetBtn_students" 
+                             style="padding: 12px; border: 2px solid #1a5f7a; border-radius: 10px; cursor: pointer; text-align: center; background: white; color: #1a5f7a; font-weight: 600; transition: all 0.2s;">
+                            👤 Individual Student
+                        </div>
+                    </div>
+                    <!-- Hidden select for form submission -->
+                    <select id="targetAudienceType" style="display:none;" onchange="updateTargetSelection()">
                         <option value="all">All Students</option>
                         <option value="course">Specific Course</option>
                         <option value="group">Specific Group</option>
@@ -1137,9 +1156,18 @@
                     </select>
                 </div>
 
-                <div id="courseSelectionDiv" class="form-group hidden">
-                    <label>Select Course</label>
-                    <select id="targetCourse" onchange="updateTargetPreview()">
+                <div id="courseSelectionDiv" class="form-group" style="display:none; background: #e8f4f8; padding: 15px; border-radius: 10px;">
+                    <label style="color: #1a5f7a; font-weight: 700;">📚 Select Course:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                        <div onclick="selectCourse('powerbi-pro')" id="course_powerbi-pro" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.2s;">⚡ Power BI Pro</div>
+                        <div onclick="selectCourse('excel-adv')" id="course_excel-adv" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.2s;">📊 Excel Advanced</div>
+                        <div onclick="selectCourse('google-sheets')" id="course_google-sheets" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.2s;">📋 Google Sheets</div>
+                        <div onclick="selectCourse('sql-complete')" id="course_sql-complete" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.2s;">🗄️ SQL Complete</div>
+                        <div onclick="selectCourse('python-ds')" id="course_python-ds" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.2s;">🐍 Python for Data</div>
+                        <div onclick="selectCourse('full-stack')" id="course_full-stack" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.2s;">🚀 Full Stack</div>
+                    </div>
+                    <!-- Hidden select for form -->
+                    <select id="targetCourse" style="display:none;" onchange="updateTargetPreview()">
                         <option value="">Select Course</option>
                         <option value="powerbi-pro">Power BI Pro</option>
                         <option value="excel-adv">Excel Advanced</option>
@@ -1150,16 +1178,16 @@
                     </select>
                 </div>
 
-                <div id="groupSelectionDiv" class="form-group hidden">
-                    <label>Select Group</label>
-                    <select id="targetGroup" onchange="updateTargetPreview()">
-                        <option value="">Select Group</option>
+                <div id="groupSelectionDiv" class="form-group" style="display:none; background: #e8f4f8; padding: 15px; border-radius: 10px;">
+                    <label style="color: #1a5f7a; font-weight: 700;">👪 Select Group:</label>
+                    <select id="targetGroup" onchange="updateTargetPreview()" style="margin-top: 10px; width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #1a5f7a;">
+                        <option value="">-- Select Group --</option>
                     </select>
                 </div>
 
-                <div id="studentsSelectionDiv" class="hidden">
-                    <label>Select Students</label>
-                    <div id="targetStudentsList" class="checkbox-list"></div>
+                <div id="studentsSelectionDiv" style="display:none; background: #e8f4f8; padding: 15px; border-radius: 10px;">
+                    <label style="color: #1a5f7a; font-weight: 700;">👤 Select Students:</label>
+                    <div id="targetStudentsList" class="checkbox-list" style="margin-top: 10px;"></div>
                 </div>
 
                 <div class="form-group">
@@ -1499,8 +1527,8 @@
                     loadStudentData(student);
                 } else {
                     const hint = students.length > 0
-                        ? 'Email ya mobile match nahi hua. Check karein.'
-                        : 'Koi student registered nahi hai abhi.';
+                        ? 'Email or mobile does not match. Please check.'
+                        : 'No students registered yet.';
                     showMessage('studentLoginError', hint);
                 }
             } catch(err) {
@@ -1553,16 +1581,6 @@
                 ? studentCourses.map(c => courseNames[c] || c).join(', ')
                 : 'Not Assigned';
             document.getElementById('studentCourse').textContent = courseText;
-
-            // Debug log
-            console.log('=== Student Data ===');
-            console.log('Student:', student.name, '| ID:', student.id);
-            console.log('Courses:', studentCourses);
-            console.log('Total recordings in Firebase:', recordings.length);
-            console.log('Total notes:', notes.length);
-            recordings.forEach(r => {
-                console.log('Recording:', r.title, '| targetType:', r.targetType, '| targetCourse:', r.targetCourse);
-            });
 
             // Calculate attendance
             const totalSessions = Object.keys(attendance).length;
@@ -1866,6 +1884,69 @@
             }).join('');
         }
 
+        // New button-based target selection
+        function setTarget(type) {
+            // Update hidden select value
+            document.getElementById('targetAudienceType').value = type;
+
+            // Reset all buttons
+            ['all', 'course', 'group', 'students'].forEach(t => {
+                const btn = document.getElementById('targetBtn_' + t);
+                if (btn) {
+                    btn.style.background = 'white';
+                    btn.style.color = '#1a5f7a';
+                }
+            });
+
+            // Highlight selected button
+            const activeBtn = document.getElementById('targetBtn_' + type);
+            if (activeBtn) {
+                activeBtn.style.background = '#1a5f7a';
+                activeBtn.style.color = 'white';
+            }
+
+            // Show/hide sections
+            document.getElementById('courseSelectionDiv').style.display = 'none';
+            document.getElementById('groupSelectionDiv').style.display = 'none';
+            document.getElementById('studentsSelectionDiv').style.display = 'none';
+
+            if (type === 'course') {
+                document.getElementById('courseSelectionDiv').style.display = 'block';
+            } else if (type === 'group') {
+                document.getElementById('groupSelectionDiv').style.display = 'block';
+            } else if (type === 'students') {
+                document.getElementById('studentsSelectionDiv').style.display = 'block';
+            }
+
+            updateTargetPreview();
+        }
+
+        // Course button selection
+        function selectCourse(courseValue) {
+            // Update hidden select
+            document.getElementById('targetCourse').value = courseValue;
+
+            // Reset all course buttons
+            ['powerbi-pro','excel-adv','google-sheets','sql-complete','python-ds','full-stack'].forEach(c => {
+                const btn = document.getElementById('course_' + c);
+                if (btn) {
+                    btn.style.background = 'white';
+                    btn.style.color = '#333';
+                    btn.style.border = '2px solid #ddd';
+                }
+            });
+
+            // Highlight selected
+            const selected = document.getElementById('course_' + courseValue);
+            if (selected) {
+                selected.style.background = '#1a5f7a';
+                selected.style.color = 'white';
+                selected.style.border = '2px solid #1a5f7a';
+            }
+
+            updateTargetPreview();
+        }
+
         function updateTargetSelection() {
             const type = document.getElementById('targetAudienceType').value;
             
@@ -1892,24 +1973,31 @@
             let text = '';
             
             if (type === 'all') {
-                text = '📢 This content will be visible to ALL students';
+                text = `📢 Visible to ALL ${students.length} students`;
             } else if (type === 'course') {
                 const course = document.getElementById('targetCourse').value;
                 if (course) {
-                    const count = students.filter(s => s.course === course).length;
-                    text = `🎯 This content will be visible to ${count} students enrolled in ${courseNames[course]}`;
+                    const count = students.filter(s => {
+                        const sc = s.courses || (s.course ? [s.course] : []);
+                        return sc.includes(course);
+                    }).length;
+                    text = `🎯 Visible to ${count} students in ${courseNames[course] || course}`;
+                } else {
+                    text = '⚠️ Please select a course!';
                 }
             } else if (type === 'group') {
-                const groupId = parseInt(document.getElementById('targetGroup').value);
+                const groupId = document.getElementById('targetGroup').value;
                 if (groupId) {
-                    const group = groups.find(g => g.id === groupId);
+                    const group = groups.find(g => String(g.id) === String(groupId));
                     if (group) {
-                        text = `👪 This content will be visible to ${group.studentIds.length} students in group "${group.name}"`;
+                        text = `👪 "${group.name}" group - Visible to ${group.studentIds.length} students`;
                     }
+                } else {
+                    text = '⚠️ Please select a group!';
                 }
             } else if (type === 'students') {
                 const selected = document.querySelectorAll('#targetStudentsList input:checked').length;
-                text = `👥 This content will be visible to ${selected} selected student(s)`;
+                text = selected > 0 ? `👤 Visible to ${selected} selected student(s)` : '⚠️ Please select students!';
             }
 
             if (text) {
@@ -1922,12 +2010,26 @@
 
         function loadTargetStudentsList() {
             const container = document.getElementById('targetStudentsList');
-            container.innerHTML = students.map(s => `
-                <div class="checkbox-item">
-                    <input type="checkbox" class="target-student-checkbox" value="${s.id}" onchange="updateTargetPreview()">
-                    <label style="margin: 0; cursor: pointer; flex: 1;">${s.name} - ${courseNames[s.course] || 'No Course'}</label>
-                </div>
-            `).join('');
+            if (!students || students.length === 0) {
+                container.innerHTML = '<p style="color:#999;">No students added yet</p>';
+                return;
+            }
+            container.innerHTML = students.map(s => {
+                const sc = s.courses || (s.course ? [s.course] : []);
+                const courseText = sc.map(c => courseNames[c] || c).join(', ') || 'No Course';
+                return `
+                <div class="checkbox-item" style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px;">
+                    <input type="checkbox" class="target-student-checkbox" 
+                           value="${s.id}" 
+                           id="stu_${s.id}"
+                           onchange="updateTargetPreview()" 
+                           style="width: 18px; height: 18px; cursor: pointer; margin-right: 10px;">
+                    <label for="stu_${s.id}" style="margin: 0; cursor: pointer; flex: 1; font-weight: 600;">
+                        ${s.name} 
+                        <span style="color: #888; font-weight: normal; font-size: 13px;">| ${courseText}</span>
+                    </label>
+                </div>`;
+            }).join('');
         }
 
         async function uploadContent() {
@@ -1949,16 +2051,16 @@
                     return;
                 }
             } else if (targetType === 'group') {
-                targetGroup = parseInt(document.getElementById('targetGroup').value);
+                targetGroup = document.getElementById('targetGroup').value;
                 if (!targetGroup) {
-                    alert('Please select a target group');
+                    alert('Please select a group!');
                     return;
                 }
             } else if (targetType === 'students') {
                 const checkboxes = document.querySelectorAll('#targetStudentsList input:checked');
-                targetStudents = Array.from(checkboxes).map(cb => parseInt(cb.value));
+                targetStudents = Array.from(checkboxes).map(cb => String(cb.value));
                 if (targetStudents.length === 0) {
-                    alert('Please select at least one student');
+                    alert('Please select at least one student!');
                     return;
                 }
             }
@@ -1993,8 +2095,7 @@
                 document.getElementById('uploadTitle').value = '';
                 document.getElementById('uploadUrl').value = '';
                 document.getElementById('uploadDescription').value = '';
-                document.getElementById('targetAudienceType').value = 'all';
-                updateTargetSelection();
+                setTarget('all');
                 showMessage('uploadSuccess', 'Content uploaded successfully! ✅');
                 loadDashboardStats();
             } catch(e) { console.error(e); alert('Error uploading content.'); }
