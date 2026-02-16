@@ -1204,6 +1204,16 @@
 
                 <button class="btn" onclick="uploadContent()">Upload Content</button>
                 <div id="uploadSuccess" class="message message-success"></div>
+
+                <hr style="margin: 30px 0;">
+                <h3>📋 Uploaded Content</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <button class="btn btn-small" onclick="showContentTab('all')" id="ctab_all" style="background:#1a5f7a;">All</button>
+                    <button class="btn btn-small" onclick="showContentTab('recordings')" id="ctab_recordings" style="background:#666;">🎥 Recordings</button>
+                    <button class="btn btn-small" onclick="showContentTab('notes')" id="ctab_notes" style="background:#666;">📝 Notes</button>
+                    <button class="btn btn-small" onclick="showContentTab('practice')" id="ctab_practice" style="background:#666;">💪 Practice</button>
+                </div>
+                <div id="uploadedContentList"></div>
             </div>
 
             <!-- Groups Tab -->
@@ -1713,6 +1723,7 @@
             updateGroupDropdown();
             loadDashboardStats();
             loadDataStats();
+            loadUploadedContentList();
         }
 
         async function addStudent() {
@@ -1785,9 +1796,9 @@
                             <small style="color: #999;">Attendance: ${attended}/${totalSessions} (${percent}%)</small>
                         </div>
                         <div class="student-actions">
-                            <button class="btn-view-details" onclick="viewStudentDetails(${s.id})">👁️ View Details</button>
-                            <button class="btn-edit" onclick="openEditModal(${s.id})">✏️ Edit</button>
-                            <button class="btn btn-small btn-delete" onclick="deleteStudent(${s.id})">Delete</button>
+                            <button class="btn-view-details" onclick="viewStudentDetails('${s.id}')">👁️ View Details</button>
+                            <button class="btn-edit" onclick="openEditModal('${s.id}')">✏️ Edit</button>
+                            <button class="btn btn-small btn-delete" onclick="deleteStudent('${s.id}')">Delete</button>
                         </div>
                     </div>
                 `;
@@ -2303,7 +2314,7 @@
 
         // Student Detail Modal Functions
         function viewStudentDetails(studentId) {
-            const student = students.find(s => s.id === studentId);
+            const student = students.find(s => String(s.id) === String(studentId));
             if (!student) return;
 
             // Calculate attendance details
@@ -2459,7 +2470,7 @@
 
         // Edit Student Functions
         function openEditModal(studentId) {
-            const student = students.find(s => s.id === studentId);
+            const student = students.find(s => String(s.id) === String(studentId));
             if (!student) return;
 
             document.getElementById('editStudentId').value = student.id;
@@ -2723,6 +2734,89 @@
         }
 
         // loadTeamData already includes dashboard and dataStats
+
+        // ── Uploaded Content Management ──────────────────────────
+        let currentContentTab = 'all';
+
+        function showContentTab(tab) {
+            currentContentTab = tab;
+            ['all','recordings','notes','practice'].forEach(t => {
+                const btn = document.getElementById('ctab_' + t);
+                if (btn) btn.style.background = t === tab ? '#1a5f7a' : '#666';
+            });
+            loadUploadedContentList();
+        }
+
+        function loadUploadedContentList() {
+            const container = document.getElementById('uploadedContentList');
+            if (!container) return;
+
+            let items = [];
+            if (currentContentTab === 'all' || currentContentTab === 'recordings')
+                items = items.concat(recordings.map(r => ({...r, _type: 'recordings'})));
+            if (currentContentTab === 'all' || currentContentTab === 'notes')
+                items = items.concat(notes.map(n => ({...n, _type: 'notes'})));
+            if (currentContentTab === 'all' || currentContentTab === 'practice')
+                items = items.concat(practice.map(p => ({...p, _type: 'practice'})));
+
+            if (items.length === 0) {
+                container.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">No content uploaded yet</p>';
+                return;
+            }
+
+            // Sort by date newest first
+            items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+            container.innerHTML = items.map(item => {
+                const typeIcon = item._type === 'recordings' ? '🎥' : item._type === 'notes' ? '📝' : '💪';
+                const typeName = item._type === 'recordings' ? 'Recording' : item._type === 'notes' ? 'Notes' : 'Practice';
+                const dateStr = item.date ? new Date(item.date).toLocaleDateString('en-IN') : '';
+                
+                let targetText = 'All Students';
+                if (item.targetType === 'course') targetText = '📚 ' + (courseNames[item.targetCourse] || item.targetCourse);
+                else if (item.targetType === 'group') {
+                    const g = groups.find(g => String(g.id) === String(item.targetGroup));
+                    targetText = '👪 ' + (g ? g.name : 'Group');
+                }
+                else if (item.targetType === 'students') {
+                    const count = item.targetStudents ? item.targetStudents.length : 0;
+                    targetText = '👤 ' + count + ' student(s)';
+                }
+
+                return `
+                <div style="background:white; border:1px solid #e0e0e0; border-radius:10px; padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                    <div style="flex:1;">
+                        <div style="font-weight:700; color:#1a5f7a; font-size:15px;">${typeIcon} ${item.title}</div>
+                        <div style="color:#888; font-size:13px; margin-top:4px;">
+                            ${typeName} &nbsp;|&nbsp; 🎯 ${targetText} &nbsp;|&nbsp; 📅 ${dateStr}
+                        </div>
+                        ${item.description ? `<div style="color:#666; font-size:13px; margin-top:4px;">${item.description}</div>` : ''}
+                        <a href="${item.url}" target="_blank" style="color:#1a5f7a; font-size:13px; text-decoration:none;">🔗 View Link</a>
+                    </div>
+                    <button onclick="deleteContent('${item.id}', '${item._type}')" 
+                            style="background:#dc3545; color:white; border:none; padding:8px 14px; border-radius:8px; cursor:pointer; font-weight:600; white-space:nowrap; flex-shrink:0;">
+                        🗑️ Delete
+                    </button>
+                </div>`;
+            }).join('');
+        }
+
+        async function deleteContent(id, type) {
+            if (!confirm('Delete this content? Students will no longer see it.')) return;
+            showLoading('Deleting...');
+            try {
+                await window.fbDelete(window.fbDoc(window.db, type, id));
+                if (type === 'recordings') recordings = recordings.filter(r => r.id !== id);
+                else if (type === 'notes') notes = notes.filter(n => n.id !== id);
+                else practice = practice.filter(p => p.id !== id);
+                loadUploadedContentList();
+                loadDashboardStats();
+            } catch(e) {
+                console.error(e);
+                alert('Error deleting content.');
+            }
+            hideLoading();
+        }
     </script>
 </body>
 </html>
